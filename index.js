@@ -26,6 +26,8 @@ bot.onText(/\/start/, async (msg) => {
         const status = await checkUserResponseStatus(chatId);
         if(status.answeredAllToday) {
             bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
+        } else if (status.startedToday) {
+            bot.sendMessage(chatId, questions[userData.step]);
         } else {
             startStandup(chatId, bot);
         }
@@ -61,8 +63,12 @@ bot.on('message', async (msg) => {
         bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
         return;
     }
-
+    
     const user = await getUser(chatId);
+    if (!user) {
+        createUser(chatId);
+        return;
+    }
     // Обробка відповідей залежно від етапу
     if (user.step === 1) {
         sendResponseToTopic(userName, questions[0], msg.text, bot);
@@ -76,23 +82,17 @@ bot.on('message', async (msg) => {
         sendResponseToTopic(userName, questions[1], msg.text, bot);
         addUserResponse(chatId, questions[1], msg.text);
         updateUserStep(chatId, 3);
-        // user.responses.push(`2. ${msg.text}`);
         bot.sendMessage(chatId, questions[2]);
-        // user.step = 3;
-        // user.lastResponseDate = getCurrentDate();
     } else if (user.step === 3) {
         sendResponseToTopic(userName, questions[2], msg.text, bot);
         addUserResponse(chatId, questions[2], msg.text);
         updateUserStep(chatId, 4);
-        // user.responses.push(`3. ${msg.text}`);
         bot.sendMessage(chatId, 'Дякую за відповіді!');
-        // user.step = 4; // Завершено
-        // user.lastResponseDate = getCurrentDate(); // Зберігаємо дату завершення
     }
 });
 
 // Ранкове нагадування о 10:00
-schedule.scheduleJob('0 8 * * *', async () => {
+schedule.scheduleJob('0 08 * * *', async () => {
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
         acc[user.chatId] = user; // Додаємо об'єкт користувача з chatId як ключ
@@ -139,19 +139,25 @@ schedule.scheduleJob('0 16 * * *', async () => {
     }
 });
 
-// // Функція для вивантаження відповідей о 19:00
-// schedule.scheduleJob('0 19 * * *', () => {
-//     let responsesText = 'Зібрані відповіді за день:\n\n';
-//     for (const chatId in users) {
-//         const user = users[chatId];
-//         if (user.responses.length > 0) {
-//             responsesText += `Користувач ${chatId}:\n`;
-//             responsesText += user.responses.join('\n') + '\n\n';
-//         }
-//     }
-//     // Надсилаємо відповіді в групу або адміністратору
-//     bot.sendMessage('-4527552372', responsesText); // Замініть ВАШ_CHAT_ID на ID групи або адміністратора
-// });
+// Функція для вивантаження відповідей о 19:00
+schedule.scheduleJob('25 02 * * *', async () => {
+    let responsesText = 'Зібрані відповіді за день:\n\n';
+    const usersArray = await getAllUsers();
+    const users = usersArray.reduce((acc, user) => {
+        acc[user.chatId] = user;
+        return acc;
+    }, {});
+    for (const chatId in users) {
+        const user = users[chatId];
+        if (user.responses.length > 0) {
+            responsesText += `Користувач ${chatId}:\n`;
+            responsesText += user.responses.join('\n') + '\n\n';
+        }
+    }
+    // Надсилаємо відповіді в групу або адміністратору
+    sendResponseToTopic('Day update', "", responsesText, bot)
+    // bot.sendMessage('-4527552372', responsesText); // Замініть ВАШ_CHAT_ID на ID групи або адміністратора
+});
 
 
 
