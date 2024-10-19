@@ -1,17 +1,14 @@
 const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
-const { sendResponseToTopic, getCurrentDate } = require('./utils');
+const { sendResponseToTopic } = require('./utils');
 const { token, questions } = require('./data');
-const { createUser, startStandup, doesUserAnsweredToday, getUsers } = require('./standups');
+const { startStandup } = require('./standups');
 
 // Створення нового екземпляра бота
 const bot = new TelegramBot(token, { polling: true });
 
-// Об'єкт для зберігання відповідей користувачів
-const users = {};
-
 // Стартова команда
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/start/, async (msg) => {
     
     const chatId = msg.chat.id;
     const userName = msg.from.username || msg.from.first_name || 'Користувач';
@@ -24,14 +21,28 @@ bot.onText(/\/start/, (msg) => {
 
     sendResponseToTopic(userName, "розпочав  роботу з ботом", "/start", bot);
 
-    createUser(chatId, users);
-
-    // Запуск опитування
-    startStandup(chatId, bot, users);
+    const userData = await getUser(chatId);
+    if(userData) {
+        const status = await checkUserResponseStatus(chatId);
+        if(status.answeredAllToday) {
+            bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
+        } else {
+            startStandup(chatId, bot);
+        }
+    } else {
+        const userInfo = {
+            chatId: chatId,
+            username: msg.from.username || '',
+            firstName: msg.from.first_name || '',
+            lastName: msg.from.last_name || ''
+        };
+        await createUser(userInfo);
+        startStandup(chatId, bot);
+    }
 });
 
 // Обробка відповідей користувачів
-bot.on('message', (msg) => {
+bot.on('message', async (msg) => {
     
     const text = msg.text;
 
@@ -42,46 +53,57 @@ bot.on('message', (msg) => {
     }
 
     const chatId = msg?.chat?.id;
-    const user = users[chatId];
     const userName = msg?.from.username || msg?.from?.first_name || 'Користувач';
 
     // Перевіряємо, чи користувач відповідав сьогодні
-    const hasAnswers = doesUserAnsweredToday(chatId, users)
-    if (hasAnswers) {
+    const status = await checkUserResponseStatus(chatId);
+    if (status.answeredAllToday) {
         bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
         return;
     }
 
+    const user = await getUser(chatId);
     // Обробка відповідей залежно від етапу
     if (user.step === 1) {
         sendResponseToTopic(userName, questions[0], msg.text, bot);
-        user.responses.push(`1. ${msg.text}`);
+        addUserResponse(chatId, questions[0], msg.text);
+        updateUserStep(chatId, 2);
+        // user.responses.push(`1. ${msg.text}`);
         bot.sendMessage(chatId, questions[1]);
-        user.step = 2;
-        user.lastResponseDate = getCurrentDate();
+        // user.step = 2;
+        // user.lastResponseDate = getCurrentDate();
     } else if (user.step === 2) {
         sendResponseToTopic(userName, questions[1], msg.text, bot);
-        user.responses.push(`2. ${msg.text}`);
+        addUserResponse(chatId, questions[1], msg.text);
+        updateUserStep(chatId, 3);
+        // user.responses.push(`2. ${msg.text}`);
         bot.sendMessage(chatId, questions[2]);
-        user.step = 3;
-        user.lastResponseDate = getCurrentDate();
+        // user.step = 3;
+        // user.lastResponseDate = getCurrentDate();
     } else if (user.step === 3) {
         sendResponseToTopic(userName, questions[2], msg.text, bot);
-        user.responses.push(`3. ${msg.text}`);
+        addUserResponse(chatId, questions[2], msg.text);
+        updateUserStep(chatId, 4);
+        // user.responses.push(`3. ${msg.text}`);
         bot.sendMessage(chatId, 'Дякую за відповіді!');
-        user.step = 4; // Завершено
-        user.lastResponseDate = getCurrentDate(); // Зберігаємо дату завершення
+        // user.step = 4; // Завершено
+        // user.lastResponseDate = getCurrentDate(); // Зберігаємо дату завершення
     }
 });
 
 // Ранкове нагадування о 10:00
-schedule.scheduleJob('20 21 * * *', () => {
+schedule.scheduleJob('0 8 * * *', async () => {
+    const usersArray = await getAllUsers();
+    const users = usersArray.reduce((acc, user) => {
+        acc[user.chatId] = user; // Додаємо об'єкт користувача з chatId як ключ
+        return acc;
+    }, {});
     for (const chatId in users) {
-        const hasAnswers = doesUserAnsweredToday(chatId, users)
-        if (hasAnswers) {
+        const status = await checkUserResponseStatus(chatId);
+        if (status.answeredAllToday) {
             return;
         }
-        if(users[chatId].step !==0) {
+        if(status.startedToday) {
             bot.sendMessage(
                 chatId, 
                 `Доброго ранку! Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
@@ -89,30 +111,30 @@ schedule.scheduleJob('20 21 * * *', () => {
             );
             return;
         } else {
-            users[chatId].step === 0;
-        }
-        if(users[chatId].step === 0) {
             bot.sendMessage(chatId, 'Доброго ранку! Час відповісти на стендап-питання.');
-            startStandup(chatId, bot, users);
+            startStandup(chatId, bot);
             return;
         }
     }
 });
 
 // Вечірнє нагадування о 18:00 для тих, хто не завершив стендап
-schedule.scheduleJob('16 21 * * *', () => {
+schedule.scheduleJob('0 16 * * *', async () => {
+    const usersArray = await getAllUsers();
+    const users = usersArray.reduce((acc, user) => {
+        acc[user.chatId] = user;
+        return acc;
+    }, {});
     for (const chatId in users) {
-        const hasAnswers = doesUserAnsweredToday(chatId, users)
-        if (hasAnswers) {
+        const status = await checkUserResponseStatus(chatId);
+        if (status.answeredAllToday) {
             return;
-        }
-        if (users[chatId].step < 4) { // Якщо користувач не завершив відповіді
+        } else {
             bot.sendMessage(
                 chatId, 
                 `Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
                 { parse_mode: 'Markdown' }
             );
-            // bot.sendMessage(chatId, questions[users[chatId].step-1]);
         }
     }
 });
@@ -158,6 +180,7 @@ schedule.scheduleJob('16 21 * * *', () => {
 // });
 
 const express = require('express');
+const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 const app = express();
 const PORT = process.env.PORT || 3000;
 

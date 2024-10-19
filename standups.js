@@ -1,4 +1,5 @@
 const { questions } = require("./data");
+const { updateUserStep } = require("./DB");
 const { getCurrentDate } = require("./utils");
 
 function createUser(chatId, users) {
@@ -11,11 +12,11 @@ function getUsers(users) {
 }
 
 // Функція для відправки запитань степдапу користувачам
-function startStandup(chatId, bot, users) {
+function startStandup(chatId, bot) {
     console.log('start standup');
     
     bot.sendMessage(chatId, questions[0]);
-    users[chatId] = { step: 1, responses: [] };
+    updateUserStep(chatId, 1);
 };
 
 function doesUserAnsweredToday(chatId, users) {
@@ -23,7 +24,6 @@ function doesUserAnsweredToday(chatId, users) {
 }
 
 module.exports = {
-    doesUserAnsweredToday,
     startStandup,
     createUser,
     getUsers
