@@ -2,7 +2,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
 const { sendResponseToTopic } = require('./utils');
 const { token, questions } = require('./data');
-const { startStandup } = require('./standups');
+const { startStandup, sendStandupResults } = require('./standups');
+const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 
 // Створення нового екземпляра бота
 const bot = new TelegramBot(token, { polling: true });
@@ -140,25 +141,23 @@ schedule.scheduleJob('0 16 * * *', async () => {
 });
 
 // Функція для вивантаження відповідей о 19:00
-schedule.scheduleJob('25 02 * * *', async () => {
-    let responsesText = 'Зібрані відповіді за день:\n\n';
+schedule.scheduleJob('54 02 * * *', async () => {
+    // let responsesText = 'Зібрані відповіді за день:\n\n';
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
         acc[user.chatId] = user;
         return acc;
     }, {});
-    for (const chatId in users) {
-        const user = users[chatId];
-        if (user.responses.length > 0) {
-            responsesText += `Користувач ${chatId}:\n`;
-            responsesText += user.responses.join('\n') + '\n\n';
-        }
-    }
-    // Надсилаємо відповіді в групу або адміністратору
-    sendResponseToTopic('Day update', "", responsesText, bot)
-    // bot.sendMessage('-4527552372', responsesText); // Замініть ВАШ_CHAT_ID на ID групи або адміністратора
+
+    sendStandupResults(users, bot);
 });
 
+const express = require('express');
+const app = express();
+
+// Тримайте сервер активним
+app.get('/', (req, res) => res.send('Telegram Bot працює!'));
+app.listen(3000, () => console.log(`Сервер працює на порту 3000`));
 
 
 // Виведення ід групи і топіку при надсиланні повідомлення
@@ -184,12 +183,3 @@ schedule.scheduleJob('25 02 * * *', async () => {
 
 //     bot.sendMessage(chatId, response, { message_thread_id: topicId });
 // });
-
-const express = require('express');
-const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Тримайте сервер активним
-app.get('/', (req, res) => res.send('Telegram Bot працює!'));
-app.listen(3000, () => console.log(`Сервер працює на порту 3000`));
