@@ -156,3 +156,11 @@ schedule.scheduleJob('16 21 * * *', () => {
 
 //     bot.sendMessage(chatId, response, { message_thread_id: topicId });
 // });
+
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Тримайте сервер активним
+app.get('/', (req, res) => res.send('Telegram Bot працює!'));
+app.listen(3000, () => console.log(`Сервер працює на порту 3000`));
