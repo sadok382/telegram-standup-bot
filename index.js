@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
 const { sendResponseToTopic } = require('./utils');
-const { token, questions } = require('./data');
+const { token, questions, MORNING_STANDUPS_TIME, STANDUPS_RESULTS_TIME, EVENING_STANDUPS_TIME } = require('./data');
 const { startStandup, sendStandupResults, sendOneUserResult } = require('./standups');
 const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 
@@ -93,8 +93,8 @@ bot.on('message', async (msg) => {
     }
 });
 
-// Ранкове нагадування о 10:00
-schedule.scheduleJob('0 08 * * *', async () => {
+// Ранкове нагадування
+schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
         acc[user.chatId] = user; // Додаємо об'єкт користувача з chatId як ключ
@@ -120,8 +120,8 @@ schedule.scheduleJob('0 08 * * *', async () => {
     }
 });
 
-// Вечірнє нагадування о 18:00 для тих, хто не завершив стендап
-schedule.scheduleJob('0 16 * * *', async () => {
+// Вечірнє нагадування для тих, хто не завершив стендап
+schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
         acc[user.chatId] = user;
@@ -142,7 +142,7 @@ schedule.scheduleJob('0 16 * * *', async () => {
 });
 
 // Функція для вивантаження відповідей о 19:00
-schedule.scheduleJob('54 02 * * *', async () => {
+schedule.scheduleJob(STANDUPS_RESULTS_TIME, async () => {
     // let responsesText = 'Зібрані відповіді за день:\n\n';
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {

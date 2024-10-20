@@ -20,17 +20,19 @@ async function sendStandupResults(users, bot) {
         const user = users[userId];
         const responses = user.responses.filter(response => response.date === currentDate);
 
-        // Пропускаємо користувача, якщо немає відповідей за поточну дату
-        if (responses.length === 0) continue;
-
         // Додаємо інформацію про користувача
         message += `${userIndex}. *${user.firstName || user.username || 'Користувач'}*\n`;
 
-        // Додаємо відповіді користувача
-        responses.forEach(response => {
-            message += `_${response.question}_\n`; // Питання курсивом
-            message += `${response.answer}\n`; // Відповідь звичайним текстом
-        });
+        if (responses.length === 0) {
+            // Додаємо повідомлення, якщо немає відповідей за поточну дату
+            message += `_Користувач сьогодні не відповідав на питання стендапу._\n`;
+        } else {
+            // Додаємо відповіді користувача
+            responses.forEach(response => {
+                message += `_${response.question}_\n`; // Питання курсивом
+                message += `${response.answer}\n`; // Відповідь звичайним текстом
+            });
+        }
 
         message += '\n'; // Розділення між користувачами
         userIndex++; // Збільшуємо порядковий номер
@@ -39,11 +41,14 @@ async function sendStandupResults(users, bot) {
     // Якщо є результати, відправляємо повідомлення
     if (userIndex > 1) {
         const targetChatId = '-1002326612965'; // Замініть на ID вашої групи
-        const targetTopicId = '3';
+        const targetTopicId = '3'; // Замініть на ID вашого топіка
+
         try {
-            // await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-            await bot.sendMessage(targetChatId, message, { parse_mode: 'Markdown', message_thread_id: targetTopicId });
-            
+            await bot.sendMessage(targetChatId, message, {
+                parse_mode: 'Markdown',
+                message_thread_id: targetTopicId
+            });
+
             console.log('Результати стендапу успішно відправлені.');
         } catch (err) {
             console.error('Помилка надсилання результатів стендапу:', err);
