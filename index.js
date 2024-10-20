@@ -52,7 +52,7 @@ bot.on('message', async (msg) => {
     console.log(msg?.chat);
     console.log(msg?.chat?.type);
     
-    if(chatId === WEBKIDS_CHAT_ID) {
+    if(chatId === WEBKIDS_CHAT_ID && msg?.chat?.type !== 'private') {
         return;
     };
     
