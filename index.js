@@ -14,6 +14,10 @@ bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userName = msg.from.username || msg.from.first_name || 'Unknown';
 
+    if(chatId === WEBKIDS_CHAT_ID || msg?.chat?.type !== 'private') {
+        return;
+    };
+
     // Вітальне повідомлення
     bot.sendMessage(
         chatId,
@@ -52,7 +56,7 @@ bot.on('message', async (msg) => {
     console.log(msg?.chat);
     console.log(msg?.chat?.type);
     
-    if(chatId === WEBKIDS_CHAT_ID && msg?.chat?.type !== 'private') {
+    if(chatId === WEBKIDS_CHAT_ID || msg?.chat?.type !== 'private') {
         return;
     };
     
