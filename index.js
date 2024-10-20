@@ -109,10 +109,13 @@ schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
         acc[user.chatId] = user;
         return acc;
     }, {});
+    
     for (const chatId in users) {
+        
         const status = await checkUserResponseStatus(chatId);
+        
         if (status.answeredAllToday) {
-            return;
+            continue;
         }
         if(status.startedToday) {
             bot.sendMessage(
@@ -120,11 +123,11 @@ schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
                 `${messages.morningGreeting} ${messages.pleaseFinishANswering} \n ${questions[users[chatId].step-1]}`, 
                 { parse_mode: 'Markdown' }
             );
-            return;
+            continue;
         } else {
-            bot.sendMessage(chatId, `${messages.morningGreeting} ${messages.itsTimetoAnswer}`);
+            await bot.sendMessage(chatId, `${messages.morningGreeting} ${messages.itsTimetoAnswer}`);
             startStandup(chatId, bot);
-            return;
+            continue;
         }
     }
 });
@@ -139,7 +142,7 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
     for (const chatId in users) {
         const status = await checkUserResponseStatus(chatId);
         if (status.answeredAllToday) {
-            return;
+            continue;
         } else {
             bot.sendMessage(
                 chatId, 
