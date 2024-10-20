@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
 const { sendResponseToTopic } = require('./utils');
-const { token, questions, MORNING_STANDUPS_TIME, STANDUPS_RESULTS_TIME, EVENING_STANDUPS_TIME, messages } = require('./data');
+const { token, questions, MORNING_STANDUPS_TIME, STANDUPS_RESULTS_TIME, EVENING_STANDUPS_TIME, messages, WEBKIDS_CHAT_ID, chatForMonitoringUsersAnswers } = require('./data');
 const { startStandup, sendStandupResults, sendOneUserResult } = require('./standups');
 const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 
@@ -46,6 +46,15 @@ bot.onText(/\/start/, async (msg) => {
 
 // Обробка відповідей користувачів
 bot.on('message', async (msg) => {
+
+    const chatId = msg?.chat?.id;
+
+    console.log(msg?.chat);
+    console.log(msg?.chat?.type);
+    
+    if(chatId === WEBKIDS_CHAT_ID) {
+        return;
+    };
     
     const text = msg.text;
 
@@ -55,7 +64,6 @@ bot.on('message', async (msg) => {
         return;
     }
 
-    const chatId = msg?.chat?.id;
     const userName = msg?.from.username || msg?.from?.first_name || 'Unknown';
 
     // Перевіряємо, чи користувач відповідав сьогодні
@@ -113,6 +121,10 @@ schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
     for (const chatId in users) {
         
         const status = await checkUserResponseStatus(chatId);
+
+        if(chatId === WEBKIDS_CHAT_ID || chatId === chatForMonitoringUsersAnswers.targetChatId) {
+            continue;
+        };
         
         if (status.answeredAllToday) {
             continue;
@@ -140,6 +152,9 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
         return acc;
     }, {});
     for (const chatId in users) {
+        if(chatId === WEBKIDS_CHAT_ID || chatId === chatForMonitoringUsersAnswers.targetChatId) {
+            continue;
+        };
         const status = await checkUserResponseStatus(chatId);
         if (status.answeredAllToday) {
             continue;
