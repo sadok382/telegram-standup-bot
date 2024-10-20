@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
 const { sendResponseToTopic } = require('./utils');
 const { token, questions } = require('./data');
-const { startStandup, sendStandupResults } = require('./standups');
+const { startStandup, sendStandupResults, sendOneUserResult } = require('./standups');
 const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 
 // Створення нового екземпляра бота
@@ -28,7 +28,7 @@ bot.onText(/\/start/, async (msg) => {
         if(status.answeredAllToday) {
             bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
         } else if (status.startedToday) {
-            bot.sendMessage(chatId, questions[userData.step]);
+            bot.sendMessage(chatId, questions[userData.step - 1]);
         } else {
             startStandup(chatId, bot);
         }
@@ -89,6 +89,7 @@ bot.on('message', async (msg) => {
         addUserResponse(chatId, questions[2], msg.text);
         updateUserStep(chatId, 4);
         bot.sendMessage(chatId, 'Дякую за відповіді!');
+        sendOneUserResult(chatId, bot);
     }
 });
 
