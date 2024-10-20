@@ -1,4 +1,4 @@
-const { questions } = require("./data");
+const { questions, WEBKIDS_CHAT_ID, STANDUPS_TOPIC_ID } = require("./data");
 const { updateUserStep, getUser } = require("./DB");
 const { getCurrentDate } = require("./utils");
 
@@ -40,8 +40,8 @@ async function sendStandupResults(users, bot) {
 
     // Якщо є результати, відправляємо повідомлення
     if (userIndex > 1) {
-        const targetChatId = '-1002326612965'; // Замініть на ID вашої групи
-        const targetTopicId = '3'; // Замініть на ID вашого топіка
+        const targetChatId = WEBKIDS_CHAT_ID;
+        const targetTopicId = STANDUPS_TOPIC_ID;
 
         try {
             await bot.sendMessage(targetChatId, message, {
@@ -73,12 +73,12 @@ async function sendOneUserResult(chatId, bot) {
     let message = `*Відповіді ${user.firstName || user.username || 'Користувач'} за ${currentDate}*\n\n`;
 
     responses.forEach(response => {
-        message += `_${response.question}_\n`; // Питання курсивом
-        message += `${response.answer}\n`; // Відповідь звичайним текстом
+        message += `_${response.question}_\n`;
+        message += `${response.answer}\n`;
     });
 
-    const targetChatId = '-1002326612965'; // Замініть на ID вашої групи
-    const targetTopicId = '3';
+    const targetChatId = WEBKIDS_CHAT_ID;
+    const targetTopicId = STANDUPS_TOPIC_ID;
     try {
         await bot.sendMessage(targetChatId, message, { parse_mode: 'Markdown', message_thread_id: targetTopicId });
             

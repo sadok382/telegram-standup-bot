@@ -1,3 +1,5 @@
+const { chatForMonitoringUsersAnswers } = require("./data");
+
 // Функція для отримання поточної дати у форматі "YYYY-MM-DD"
 function getCurrentDate() {
     const now = new Date();
@@ -6,8 +8,8 @@ function getCurrentDate() {
 
 // Обробка всіх отриманих повідомлень і надсилання в test-bot
 function sendResponseToTopic(userName, question, answer, bot) {
-    const targetChatId = '-1002326612965'; // Замініть на ID вашої групи
-    const targetTopicId = '3'; // Замініть на ID вашого топіка
+    const targetChatId = chatForMonitoringUsersAnswers.targetChatId;
+    const targetTopicId = chatForMonitoringUsersAnswers.targetTopicId;
     const message = `Користувач ${userName} на питання "${question}" відповів: "${answer}"`;
 
     // Надсилаємо повідомлення в заданий топік

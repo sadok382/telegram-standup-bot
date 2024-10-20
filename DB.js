@@ -85,8 +85,7 @@ async function getAllUsers() {
 
 // Функція для додавання відповіді користувача
 async function addUserResponse(chatId, question, answer) {
-    const date = new Date().toISOString().split('T')[0]; // Поточна дата у форматі YYYY-MM-DD
-
+    const date = new Date().toISOString().split('T')[0];
     try {
         const user = await User.findOne({ chatId });
 

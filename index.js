@@ -75,10 +75,7 @@ bot.on('message', async (msg) => {
         sendResponseToTopic(userName, questions[0], msg.text, bot);
         addUserResponse(chatId, questions[0], msg.text);
         updateUserStep(chatId, 2);
-        // user.responses.push(`1. ${msg.text}`);
         bot.sendMessage(chatId, questions[1]);
-        // user.step = 2;
-        // user.lastResponseDate = getCurrentDate();
     } else if (user.step === 2) {
         sendResponseToTopic(userName, questions[1], msg.text, bot);
         addUserResponse(chatId, questions[1], msg.text);
@@ -97,7 +94,7 @@ bot.on('message', async (msg) => {
 schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
-        acc[user.chatId] = user; // Додаємо об'єкт користувача з chatId як ключ
+        acc[user.chatId] = user;
         return acc;
     }, {});
     for (const chatId in users) {
@@ -132,6 +129,9 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
         if (status.answeredAllToday) {
             return;
         } else {
+            console.log(questions[users[chatId].step-1]);
+            console.log(users[chatId].step-1);
+            console.log(users);
             bot.sendMessage(
                 chatId, 
                 `Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
@@ -141,9 +141,8 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
     }
 });
 
-// Функція для вивантаження відповідей о 19:00
+// Функція для вивантаження відповідей за день
 schedule.scheduleJob(STANDUPS_RESULTS_TIME, async () => {
-    // let responsesText = 'Зібрані відповіді за день:\n\n';
     const usersArray = await getAllUsers();
     const users = usersArray.reduce((acc, user) => {
         acc[user.chatId] = user;

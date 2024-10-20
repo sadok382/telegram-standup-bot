@@ -1,4 +1,4 @@
-require('dotenv').config(); // Імпортуємо dotenv і завантажуємо .env
+require('dotenv').config(); 
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatForMonitoringUsersAnswers = {
@@ -6,9 +6,9 @@ const chatForMonitoringUsersAnswers = {
     targetTopicId: process.env.MANAGING_TOPIC_ID
 }
 const questions = [
-    '1. Що ви зробили вчора?',
-    '2. Що плануєте зробити сьогодні?',
-    '3. Чи є перешкоди?'
+    '1. Якими задачами займався/-лась за минулу добу? Що вдалось зробити?',
+    '2. Чим плануєш займатись далі?',
+    '3. Які є питання чи складнощі?'
 ]
 
 const WEBKIDS_CHAT_ID = process.env.WEBKIDS_CHAT_ID;
