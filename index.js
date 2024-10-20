@@ -52,9 +52,6 @@ bot.onText(/\/start/, async (msg) => {
 bot.on('message', async (msg) => {
 
     const chatId = msg?.chat?.id;
-
-    console.log(msg?.chat);
-    console.log(msg?.chat?.type);
     
     if(chatId === WEBKIDS_CHAT_ID || msg?.chat?.type !== 'private') {
         return;
