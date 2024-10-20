@@ -170,6 +170,7 @@ const app = express();
 // Тримайте сервер активним
 app.get('/', (req, res) => res.send('Telegram Bot працює!'));
 app.listen(3000, () => console.log(`Сервер працює на порту 3000`));
+app.get('/healthcheck', (req, res) => res.status(200).send('OK'));
 
 
 // Виведення ід групи і топіку при надсиланні повідомлення
