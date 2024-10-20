@@ -11,6 +11,15 @@ const questions = [
     '3. Які є питання чи складнощі?'
 ]
 
+const messages = {
+    greeting: 'Привіт! Я бот, який збиратиме ваші відповіді для щоденних стендапів. Я надсилатиму нагадування о 10:00 і о 18:00 та формуватиму відповідь команди о 19:00 щоденно. Давайте почнемо!',
+    completeAllQuestion: 'Ви вже відповіли на всі питання сьогодні. Дякуємо!',
+    morningGreeting: 'Доброго ранку!',
+    pleaseFinishANswering: 'Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу.',
+    itsTimetoAnswer: 'Час відповісти на стендап-питання.'
+    
+}
+
 const WEBKIDS_CHAT_ID = process.env.WEBKIDS_CHAT_ID;
 const STANDUPS_TOPIC_ID = process.env.STANDUPS_TOPIC_ID;
 const MEETINGS_TOPIC_ID = process.env.MEETINGS_TOPIC_ID;
@@ -21,6 +30,7 @@ const STANDUPS_RESULTS_TIME = process.env.STANDUPS_RESULTS_TIME;
 module.exports = {
     token,
     questions,
+    messages,
     chatForMonitoringUsersAnswers,
     WEBKIDS_CHAT_ID,
     STANDUPS_TOPIC_ID,

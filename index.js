@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const schedule = require('node-schedule');
 const { sendResponseToTopic } = require('./utils');
-const { token, questions, MORNING_STANDUPS_TIME, STANDUPS_RESULTS_TIME, EVENING_STANDUPS_TIME } = require('./data');
+const { token, questions, MORNING_STANDUPS_TIME, STANDUPS_RESULTS_TIME, EVENING_STANDUPS_TIME, messages } = require('./data');
 const { startStandup, sendStandupResults, sendOneUserResult } = require('./standups');
 const { createUser, checkUserResponseStatus, getUser, addUserResponse, updateUserStep, getAllUsers } = require('./DB');
 
@@ -12,12 +12,12 @@ const bot = new TelegramBot(token, { polling: true });
 bot.onText(/\/start/, async (msg) => {
     
     const chatId = msg.chat.id;
-    const userName = msg.from.username || msg.from.first_name || 'Користувач';
+    const userName = msg.from.username || msg.from.first_name || 'Unknown';
 
     // Вітальне повідомлення
     bot.sendMessage(
         chatId,
-        'Привіт! Я бот, який збиратиме ваші відповіді для щоденних стендапів. Я надсилатиму нагадування о 10:00 і о 18:00 та формуватиму відповідь команди о 19:00 щоденно. Давайте почнемо!'
+        messages.greeting
     );
 
     sendResponseToTopic(userName, "розпочав  роботу з ботом", "/start", bot);
@@ -26,7 +26,7 @@ bot.onText(/\/start/, async (msg) => {
     if(userData) {
         const status = await checkUserResponseStatus(chatId);
         if(status.answeredAllToday) {
-            bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
+            bot.sendMessage(chatId, messages.completeAllQuestion);
         } else if (status.startedToday) {
             bot.sendMessage(chatId, questions[userData.step - 1]);
         } else {
@@ -56,12 +56,12 @@ bot.on('message', async (msg) => {
     }
 
     const chatId = msg?.chat?.id;
-    const userName = msg?.from.username || msg?.from?.first_name || 'Користувач';
+    const userName = msg?.from.username || msg?.from?.first_name || 'Unknown';
 
     // Перевіряємо, чи користувач відповідав сьогодні
     const status = await checkUserResponseStatus(chatId);
     if (status.answeredAllToday) {
-        bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
+        bot.sendMessage(chatId, messages.completeAllQuestion);
         return;
     }
 
@@ -76,7 +76,7 @@ bot.on('message', async (msg) => {
         };
         bot.sendMessage(
             chatId,
-            'Привіт! Я бот, який збиратиме ваші відповіді для щоденних стендапів. Я надсилатиму нагадування о 10:00 і о 18:00 та формуватиму відповідь команди о 19:00 щоденно. Давайте почнемо!'
+            messages.greeting
         );
         createUser(userInfo);
         startStandup(chatId, bot);
@@ -117,12 +117,12 @@ schedule.scheduleJob(MORNING_STANDUPS_TIME, async () => {
         if(status.startedToday) {
             bot.sendMessage(
                 chatId, 
-                `Доброго ранку! Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
+                `${messages.morningGreeting} ${messages.pleaseFinishANswering} \n ${questions[users[chatId].step-1]}`, 
                 { parse_mode: 'Markdown' }
             );
             return;
         } else {
-            bot.sendMessage(chatId, 'Доброго ранку! Час відповісти на стендап-питання.');
+            bot.sendMessage(chatId, `${messages.morningGreeting} ${messages.itsTimetoAnswer}`);
             startStandup(chatId, bot);
             return;
         }
@@ -143,7 +143,7 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
         } else {
             bot.sendMessage(
                 chatId, 
-                `Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
+                `${messages.pleaseFinishANswering} \n ${questions[users[chatId].step-1]}`, 
                 { parse_mode: 'Markdown' }
             );
         }
