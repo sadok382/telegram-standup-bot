@@ -64,10 +64,22 @@ bot.on('message', async (msg) => {
         bot.sendMessage(chatId, 'Ви вже відповіли на всі питання сьогодні. Дякуємо!');
         return;
     }
-    
+
     const user = await getUser(chatId);
+    
     if (!user) {
-        createUser(chatId);
+        const userInfo = {
+            chatId: chatId,
+            username: msg.from.username || '',
+            firstName: msg.from.first_name || '',
+            lastName: msg.from.last_name || ''
+        };
+        bot.sendMessage(
+            chatId,
+            'Привіт! Я бот, який збиратиме ваші відповіді для щоденних стендапів. Я надсилатиму нагадування о 10:00 і о 18:00 та формуватиму відповідь команди о 19:00 щоденно. Давайте почнемо!'
+        );
+        createUser(userInfo);
+        startStandup(chatId, bot);
         return;
     }
     // Обробка відповідей залежно від етапу
@@ -129,9 +141,6 @@ schedule.scheduleJob(EVENING_STANDUPS_TIME, async () => {
         if (status.answeredAllToday) {
             return;
         } else {
-            console.log(questions[users[chatId].step-1]);
-            console.log(users[chatId].step-1);
-            console.log(users);
             bot.sendMessage(
                 chatId, 
                 `Будь ласка, завершіть відповіді на питання сьогоднішнього стендапу. \n ${questions[users[chatId].step-1]}`, 
