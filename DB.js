@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { getCurrentDate } = require('./utils');
+const { getCurrentDate, escapeMarkdown } = require('./utils');
 
 // Підключення до MongoDB
 const mongoURI = process.env.MONGO_URI;
@@ -86,11 +86,16 @@ async function getAllUsers() {
 // Функція для додавання відповіді користувача
 async function addUserResponse(chatId, question, answer) {
     const date = new Date().toISOString().split('T')[0];
+    
+    // Екрануємо питання та відповідь
+    const escapedQuestion = escapeMarkdown(question);
+    const escapedAnswer = escapeMarkdown(answer);
+    
     try {
         const user = await User.findOne({ chatId });
 
         if (user) {
-            user.responses.push({ question, answer, date });
+            user.responses.push({ question: escapedQuestion, answer: escapedAnswer, date });
             user.lastResponseDate = date;
             await user.save();
             console.log(`Відповідь користувача з chatId ${chatId} збережена.`);

@@ -16,7 +16,13 @@ function sendResponseToTopic(userName, question, answer, bot) {
     bot.sendMessage(targetChatId, message, { message_thread_id: targetTopicId });
 };
 
+// Функція для екранування символів у Markdown
+function escapeMarkdown(text) {
+    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+}
+
 module.exports = {
     getCurrentDate,
-    sendResponseToTopic
+    sendResponseToTopic,
+    escapeMarkdown
 };
