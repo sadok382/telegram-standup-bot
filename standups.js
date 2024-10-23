@@ -1,6 +1,6 @@
 const { questions, WEBKIDS_CHAT_ID, STANDUPS_TOPIC_ID } = require("./data");
 const { updateUserStep, getUser } = require("./DB");
-const { getCurrentDate, unescapeMarkdown } = require("./utils");
+const { getCurrentDate, unescapeMarkdown, splitMessage } = require("./utils");
 
 // Функція для відправки запитань степдапу користувачам
 function startStandup(chatId, bot) {
@@ -46,10 +46,13 @@ async function sendStandupResults(users, bot) {
         const targetTopicId = STANDUPS_TOPIC_ID;
 
         try {
-            await bot.sendMessage(targetChatId, message, {
-                parse_mode: 'Markdown',
-                message_thread_id: targetTopicId
-            });
+            const messageParts = splitMessage(message);
+            for (const part of messageParts) {
+                await bot.sendMessage(targetChatId, part, {
+                    parse_mode: 'Markdown',
+                    message_thread_id: targetTopicId
+                });
+            }
 
             console.log('Результати стендапу успішно відправлені.');
         } catch (err) {

@@ -26,9 +26,30 @@ function unescapeMarkdown(text) {
     return text.replace(/\\([_*\[\]()~`>#+\-=|{}.!])/g, '$1');
 }
 
+function splitMessage(message, maxLength = 4096) {
+    const parts = [];
+    let start = 0;
+
+    while (start < message.length) {
+        let end = start + maxLength;
+
+        // Переконуємося, що не розриваємо текст посередині слова
+        if (end < message.length) {
+            end = message.lastIndexOf('\n', end); // Знаходимо останній перенос рядка
+            if (end < start) end = start + maxLength; // Якщо переносу немає, обрізаємо на maxLength
+        }
+
+        parts.push(message.slice(start, end));
+        start = end;
+    }
+
+    return parts;
+}
+
 module.exports = {
     getCurrentDate,
     sendResponseToTopic,
     escapeMarkdown,
-    unescapeMarkdown
+    unescapeMarkdown,
+    splitMessage
 };
