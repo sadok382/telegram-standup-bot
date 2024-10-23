@@ -21,8 +21,14 @@ function escapeMarkdown(text) {
     return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
 }
 
+// Функція для видалення екранування символів у Markdown
+function unescapeMarkdown(text) {
+    return text.replace(/\\([_*\[\]()~`>#+\-=|{}.!])/g, '$1');
+}
+
 module.exports = {
     getCurrentDate,
     sendResponseToTopic,
-    escapeMarkdown
+    escapeMarkdown,
+    unescapeMarkdown
 };

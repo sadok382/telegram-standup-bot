@@ -1,6 +1,6 @@
 const { questions, WEBKIDS_CHAT_ID, STANDUPS_TOPIC_ID } = require("./data");
 const { updateUserStep, getUser } = require("./DB");
-const { getCurrentDate } = require("./utils");
+const { getCurrentDate, unescapeMarkdown } = require("./utils");
 
 // Функція для відправки запитань степдапу користувачам
 function startStandup(chatId, bot) {
@@ -29,8 +29,10 @@ async function sendStandupResults(users, bot) {
         } else {
             // Додаємо відповіді користувача
             responses.forEach(response => {
-                message += `_${response.question}_\n`; // Питання курсивом
-                message += `${response.answer}\n`; // Відповідь звичайним текстом
+                const answer = unescapeMarkdown(response.answer);
+                const question = unescapeMarkdown(response.question);
+                message += `_${question}_\n`; // Питання курсивом
+                message += `${answer}\n`; // Відповідь звичайним текстом
             });
         }
 
@@ -73,8 +75,11 @@ async function sendOneUserResult(chatId, bot) {
     let message = `*Відповіді ${user.firstName || user.username || 'Користувач'} за ${currentDate}*\n\n`;
 
     responses.forEach(response => {
-        message += `_${response.question}_\n`;
-        message += `${response.answer}\n`;
+        const answer = unescapeMarkdown(response.answer);
+        const question = unescapeMarkdown(response.question);
+
+        message += `_${question}_\n`;
+        message += `${answer}\n`;
     });
 
     const targetChatId = WEBKIDS_CHAT_ID;
