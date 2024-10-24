@@ -104,7 +104,7 @@ bot.on('message', async (msg) => {
         bot.sendMessage(chatId, questions[2]);
     } else if (user.step === 3) {
         sendResponseToTopic(userName, questions[2], msg.text, bot);
-        addUserResponse(chatId, questions[2], msg.text);
+        await addUserResponse(chatId, questions[2], msg.text);
         updateUserStep(chatId, 4);
         bot.sendMessage(chatId, 'Дякую за відповіді!');
         sendOneUserResult(chatId, bot);
